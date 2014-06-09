@@ -130,6 +130,14 @@ entire set (for example by iterating over it).
     >>> pprint(set.generational_updates(10))
     {'generation': 9}
 
+The removals that are lost are evicted from the internal data
+structures.
+
+    >>> len(set.removals)
+    3
+    >>> 0 in set.generations
+    False
+
 We can iterate over a set:
 
     >>> set = zc.generationalset.GSet()
