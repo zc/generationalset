@@ -157,6 +157,12 @@ without subset generations:
 Changes
 *******
 
+0.1.1 (2014-06-09)
+==================
+
+Fixed: Internal data structures were misshandled when there were more
+       than the maximum number of removals.
+
 0.1.0 (2014-06-08)
 ==================
 
