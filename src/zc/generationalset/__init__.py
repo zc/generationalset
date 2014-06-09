@@ -60,7 +60,7 @@ class GenerationalSet(persistent.Persistent):
         self.generations[id] = self.generation
 
         while len(removals) > self.maximum_removals:
-            ob = removals.pop(removals.minKey())
+            id = removals.pop(removals.minKey())
             self.generations.pop(id)
 
     def __getitem__(self, id):
