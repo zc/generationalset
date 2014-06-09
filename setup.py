@@ -11,7 +11,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-name, version = 'zc.generationalset', '0.1.1'
+name, version = 'zc.generationalset', '0.1.2'
 
 install_requires = ['setuptools', 'BTrees']
 extras_require = dict(test=['manuel', 'mock', 'zope.testing'])
