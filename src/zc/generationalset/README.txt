@@ -190,7 +190,7 @@ you pass in a parent set and an id when creating a set:
     >>> child1 = zc.generationalset.GSet('1', parent)
     >>> child2 = zc.generationalset.GSet('2', parent)
 
-Note here that we didn't ass child1 and child2 to parent.
+Note here that we didn't add child1 and child2 to parent.
 
     >>> len(parent)
     0
