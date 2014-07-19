@@ -78,11 +78,11 @@ class GenerationalSet(persistent.Persistent):
     def values(self, minimim_generation):
         return self.contents.values(minimim_generation)
 
-    def __contains__(self, ob):
+    def __contains__(self, ob_or_id):
         try:
-            id = self.get_id(ob)
+            id = self.get_id(ob_or_id)
         except AttributeError:
-            id = ob
+            id = ob_or_id
         generation = self.generations.get(id, None)
         return generation is not None and generation in self.contents
 
