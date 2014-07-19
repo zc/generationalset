@@ -157,6 +157,15 @@ without subset generations:
 Changes
 *******
 
+- Improved subset APIs:
+
+  - No longer need to specify superset flag.
+
+  - Can have set and non-set children.
+
+  - A subset can be created without a parent and the parent will be
+    set when it's added to a containing set.
+
 0.1.2 (2014-06-09)
 ==================
 

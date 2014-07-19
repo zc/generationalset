@@ -10,13 +10,12 @@ class GenerationalSet(persistent.Persistent):
         id=None,
         parent=None,
         maximum_removals=99,
-        superset=False,
+        superset=False, # Ignored, for backward compatibility
         id_attribute='id',
         ):
         self.id = id
         self.parent = parent
         self.maximum_removals = maximum_removals
-        self.superset = superset
         self.id_attribute = id_attribute
         self.contents = BTrees.LOBTree.BTree()    # {generation -> ob}
         self.generations = BTrees.OLBTree.BTree() # {id -> generation}
@@ -41,7 +40,10 @@ class GenerationalSet(persistent.Persistent):
         if id is None:
             id = self.get_id(ob)
         generation = self.generations.get(id, None)
-        if generation is not None:
+        if generation is None:
+            if isinstance(ob, GenerationalSet) and ob.parent is None:
+                ob.parent = self
+        else:
             self.contents.pop(generation, None)
             self.removals.pop(generation, None)
         self._updated()
@@ -97,25 +99,20 @@ class GenerationalSet(persistent.Persistent):
         if (len(self.removals) >= self.maximum_removals and
             generation < self.removals.minKey()
             ):
-            result['contents'] = (
-                [subset.generational_updates(generation, True)
-                 for subset in self.contents.values()]
-                if self.superset
-                else list(self.contents.values())
-            )
+            values = self.contents.values()
+            key = 'contents'
         else:
-            adds = self.contents.values(generation+1)
-            adds = ([subset.generational_updates(generation, True)
-                     for subset in adds]
-                    if self.superset
-                    else list(adds)
-            )
-            if adds:
-                result['adds'] = adds
-
+            values = self.contents.values(generation+1)
+            key = 'adds'
             removals = list(self.removals.values(generation+1))
             if removals:
                 result['removals'] = removals
+
+        if values or key == 'contents':
+            values = [v.generational_updates(generation, True)
+                      if isinstance(v, GSet) else v
+                      for v in values]
+            result[key] = values
 
         return result
 

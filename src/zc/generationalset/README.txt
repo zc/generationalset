@@ -179,15 +179,25 @@ structure, all of the sets share a common generation and you can get
 changes for for the entire tree in a single call. To use nested sets,
 you pass in a parent set and an id when creating a set:
 
-    >>> parent = zc.generationalset.GSet(superset=True)
+    >>> parent = zc.generationalset.GSet()
     >>> child1 = zc.generationalset.GSet('1', parent)
     >>> child2 = zc.generationalset.GSet('2', parent)
+
+Note here that we didn't ass child1 and child2 to parent.
+
+    >>> len(parent)
+    0
+
+However, when we modify child1 and child, they'd add themselves to the parent:
 
     >>> child1.add(Thing(11))
     >>> child1.add(Thing(12))
     >>> child2.add(Thing(21))
     >>> child2.add(Thing(22))
     >>> child2.remove(Thing(22))
+
+    >>> len(parent)
+    2
 
 Now we can ask the parent for updates:
 
@@ -204,6 +214,39 @@ Now we can ask the parent for updates:
     {'adds': [{'id': '2', 'removals': [22]}], 'generation': 6}
     >>> pprint(parent.generational_updates(6))
     {'generation': 6}
+
+Sets can be nested to arbitrary levels:
+
+    >>> child11 = zc.generationalset.GSet('11', child1)
+    >>> child12 = zc.generationalset.GSet('12', child1)
+
+    >>> child111 = zc.generationalset.GSet('111')
+    >>> child11.add(child111)
+    >>> child112 = zc.generationalset.GSet('112')
+    >>> child11.add(child112)
+
+In these last 2 examples, we didn't set the parent. It was set when we
+added the children to child11.
+
+    >>> child111.parent is child11
+    True
+
+    >>> pprint(parent.generational_updates(6))
+    {'adds': [{'adds': [{'adds': [{'id': '111'}, {'id': '112'}], 'id': '11'}],
+               'id': '1'}],
+     'generation': 8}
+
+When a child is updated, it's generation because the same as the root object:
+
+    >>> child111.add(Thing(1111))
+    >>> child111.generation == parent.generation
+    True
+
+    >>> pprint(parent.generational_updates(8))
+    {'adds': [{'adds': [{'adds': [{'adds': [Thing(1111)], 'id': '111'}],
+                         'id': '11'}],
+               'id': '1'}],
+     'generation': 9}
 
 Notifications
 -------------
