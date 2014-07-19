@@ -54,6 +54,13 @@ Containment is based on ids:
     >>> Thing(2) in set
     False
 
+You can also query containment using ids rather than objects.
+
+    >>> 1 in set
+    True
+    >>> 2 in set
+    False
+
 As with regular sets, adding the same thing multiple times doesn't
 affect the set size:
 
