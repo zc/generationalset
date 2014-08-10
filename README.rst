@@ -157,6 +157,9 @@ without subset generations:
 Changes
 *******
 
+0.2.0
+=====
+
 - Improved subset APIs:
 
   - No longer need to specify superset flag.
