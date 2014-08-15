@@ -157,6 +157,12 @@ without subset generations:
 Changes
 *******
 
+- Fixed: exceptions were raised when objects added to generational
+  sets quacked a little like generational sets.
+
+0.2.0 (2014-08-10)
+==================
+
 - Improved subset APIs:
 
   - No longer need to specify superset flag.

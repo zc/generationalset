@@ -41,7 +41,7 @@ class GenerationalSet(persistent.Persistent):
             id = self.get_id(ob)
         generation = self.generations.get(id, None)
         if generation is None:
-            if hasattr(ob, 'generational_updates') and ob.parent is None:
+            if isinstance(ob, GenerationalSet) and ob.parent is None:
                 ob.parent = self
         else:
             self.contents.pop(generation, None)
@@ -111,9 +111,8 @@ class GenerationalSet(persistent.Persistent):
         values = list(values)
         if values or key == 'contents':
             for i, v in enumerate(values):
-                generational_updates = getattr(v, 'generational_updates', self)
-                if generational_updates is not self:
-                    values[i] = generational_updates(generation, True)
+                if isinstance(v, GenerationalSet):
+                    values[i] = v.generational_updates(generation, True)
             result[key] = values
 
         return result
