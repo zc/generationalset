@@ -28,6 +28,25 @@ def ids_do_no_harm():
 
     """
 
+def no_duck_typing():
+    """Duck typing is for quacks
+
+    We'd foolishly imagined that objects could play with the internal
+    gset collaborations by implementing a few messages.  This tuened
+    out to be a bit silly. Worse, it's not uncommon for an object that
+    uses generational sets to implement ``generational_updates``:
+
+    >>> import zc.generationalset
+    >>> class C:
+    ...     id = ''
+    ...     def __init__(self):
+    ...         self.changes = zc.generationalset.GSet()
+    ...         self.changes.add(self)
+    ...     def generational_updates(self, generation):
+    ...         return self.changes.generational_updates(self)
+    >>> c = C() # When we used hasattr, rather than isinstance, this blew up
+    """
+
 def test_suite():
     return unittest.TestSuite((
         doctest.DocTestSuite(),

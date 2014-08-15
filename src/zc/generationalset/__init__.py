@@ -41,7 +41,7 @@ class GenerationalSet(persistent.Persistent):
             id = self.get_id(ob)
         generation = self.generations.get(id, None)
         if generation is None:
-            if hasattr(ob, 'generational_updates') and ob.parent is None:
+            if isinstance(ob, GenerationalSet) and ob.parent is None:
                 ob.parent = self
         else:
             self.contents.pop(generation, None)
