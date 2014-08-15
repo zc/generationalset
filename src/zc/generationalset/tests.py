@@ -43,8 +43,9 @@ def no_duck_typing():
     ...         self.changes = zc.generationalset.GSet()
     ...         self.changes.add(self)
     ...     def generational_updates(self, generation):
-    ...         return self.changes.generational_updates(self)
+    ...         return self.changes.generational_updates(generation)
     >>> c = C() # When we used hasattr, rather than isinstance, this blew up
+    >>> _ = c.generational_updates(0) # ditty w getattr
     """
 
 def test_suite():

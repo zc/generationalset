@@ -111,9 +111,8 @@ class GenerationalSet(persistent.Persistent):
         values = list(values)
         if values or key == 'contents':
             for i, v in enumerate(values):
-                generational_updates = getattr(v, 'generational_updates', self)
-                if generational_updates is not self:
-                    values[i] = generational_updates(generation, True)
+                if isinstance(v, GenerationalSet):
+                    values[i] = v.generational_updates(generation, True)
             result[key] = values
 
         return result
