@@ -50,6 +50,13 @@ class GenerationalSet(persistent.Persistent):
         self.contents[self.generation] = ob
         self.generations[id] = self.generation
 
+    def changed(self, ob, id=None):
+        if id is None:
+            id = self.get_id(ob)
+        generation = self.generations.get(id, None)
+        if generation is not None:
+            self.add(ob, id)
+
     def remove(self, ob, id=None):
         if id is None:
             id = self.get_id(ob)

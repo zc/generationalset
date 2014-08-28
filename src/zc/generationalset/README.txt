@@ -178,6 +178,33 @@ An object can only appear in one of adds and removals:
     >>> set.generational_updates(0)
     {'generation': 5, 'removals': [1]}
 
+Updating the Gset. Only if object is present in the set, it will be updated:
+
+    >>> set = zc.generationalset.GSet()
+    >>> set.add(Thing(1))
+    >>> set.generational_updates(0)
+    {'generation': 2, 'adds': [Thing(1)]}
+
+
+    >>> set.changed(Thing(2))
+    >>> set.generational_updates(1)
+    {'generation': 2, 'adds': [Thing(1)]}
+
+    >>> set.changed(Thing(1))
+    >>> set.generational_updates(2)
+    {'generation': 3, 'adds': [Thing(1)]}
+
+    >>> set.add(Thing(2))
+    >>> set.generational_updates(3)
+    {'generation': 4, 'adds': [Thing(2)]}
+
+    >>> set.changed(Thing(2))
+    >>> set.generational_updates(4)
+    {'generation': 5, 'adds': [Thing(2)]}
+
+    >>> set.generational_updates(0)
+    {'generation': 5, 'adds': [Thing(1), Thing(2)]}
+
 Nested sets
 -----------
 
