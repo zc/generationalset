@@ -1,0 +1,259 @@
+Fixed Bugs
+==========
+
+Here are demonstrations of various bugs that have been fixed in Manuel.  If you
+encounter a bug in a previous version of Manuel, check here in the newest
+version to see if your bug has been addressed.
+
+
+Start and End Coinciding
+------------------------
+
+If a line of text matches both a "start" and "end" regular expression, no
+exception should be raised.
+
+    >>> source = """\
+    ... Blah, blah.
+    ...
+    ... xxx
+    ... some text
+    ... xxx
+    ...
+    ... """
+    >>> import manuel
+    >>> document = manuel.Document(source)
+    >>> import re
+    >>> start = end = re.compile(r'^xxx$', re.MULTILINE)
+    >>> document.find_regions(start, end)
+    [<manuel.Region object at ...]
+
+
+Code-block Options
+------------------
+
+The code-block handler didn't originally allow reST options, so blocks like the
+one below would generate a syntax error during parsing.
+
+    .. code-block:: python
+        :linenos:
+
+        class Foo(object):
+            pass
+
+.. -> source
+
+.. code-block:: python
+
+    import manuel.codeblock
+    m = manuel.codeblock.Manuel()
+    manuel.Document(source).parse_with(m)
+
+
+Code-block options with hyphens
+-------------------------------
+
+The code-block handler reST option parsing used to not allow for options with
+hyphens in their name, so blocks like this one would generate a syntax error:
+
+    .. code:: python
+        :number-lines:
+
+        class Foo(object):
+            pass
+
+.. -> source
+
+.. code-block:: python
+
+    import manuel.codeblock
+    m = manuel.codeblock.Manuel()
+    manuel.Document(source).parse_with(m)
+
+
+Empty documents
+---------------
+
+While empty documents aren't useful, they are still documents containing
+no tests, and shouldn't break the test suite.
+
+    >>> document = manuel.Document('')
+    >>> document.source
+    '\n'
+
+
+Glob lifecycle
+--------------
+
+Anything put into the globs during a doctest run should still be in there
+afterward.
+
+        >>> a
+        1
+
+        >>> b = 2
+
+.. -> source
+
+.. code-block:: python
+
+    import manuel.doctest
+    m = manuel.doctest.Manuel()
+    globs = {'a': 1}
+    document = manuel.Document(source)
+    document.process_with(m, globs=globs)
+
+The doctest in the `source` variable ran with no errors.
+
+    >>> six.print_(document.formatted())
+
+And now the globs dictionary reflects the changes made when the doctest ran.
+
+    >>> globs['b']
+    2
+
+
+zope.testing.module
+-------------------
+
+At one point, because of the way manuel.doctest handles glob dictionaries,
+zope.testing.module didn't work.
+
+We need a globs dictionary.
+
+    >>> globs = {'foo': 1}
+
+To call the setUp and tearDown functions, we need to set up a fake test
+object that uses our globs dict from above.
+
+.. code-block:: python
+
+    class FakeTest(object):
+        def __init__(self):
+           self.globs = globs
+
+    test = FakeTest()
+
+Now we will use the globs as a module.
+
+    >>> import zope.testing.module
+    >>> zope.testing.module.setUp(test, 'fake')
+
+Now if we run this test through Manuel, the fake module machinery works.
+
+    The items put into the globs before the test are here.
+
+        >>> import fake
+        >>> fake.foo
+        1
+
+    And if we create new bindings, they appear in the module too.
+
+        >>> bar = 2
+        >>> fake.bar
+        2
+
+.. -> source
+
+.. code-block:: python
+
+    import manuel.doctest
+    m = manuel.doctest.Manuel()
+    document = manuel.Document(source)
+    document.process_with(m, globs=globs)
+
+The doctest in the `source` variable ran with no errors.
+
+    >>> six.print_(document.formatted())
+
+We should clean up now.
+
+    >>> import zope.testing.module
+    >>> zope.testing.module.tearDown(test)
+
+
+Debug flag and adding instances
+-------------------------------
+
+The unittest integration (manuel.testing) sets the debug attribute on Manuel
+objects.  Manuel instances that result from adding instances together need to
+have the debug value passed to each Manuel instances that was added together.
+
+    >>> m1 = manuel.Manuel()
+    >>> m2 = manuel.Manuel()
+
+The debug flag starts off false...
+
+    >>> m1.debug
+    False
+    >>> m2.debug
+    False
+
+...but if we set it add the two instances together and set the flag on on the
+resulting instance, the other one gets the value too.
+
+    >>> m3 = m1 + m2
+    >>> m3.debug = True
+
+    >>> m1.debug
+    True
+    >>> m2.debug
+    True
+    >>> m3.debug
+    True
+
+
+TestCase id methods
+-------------------
+
+Twisted's testrunner, trial, makes use of the id method of TestCase instances
+in a way that requires it to be a meaningful string.
+
+For manuel.testing.TestCase instances, this used to return None. As you can
+see below, the manuel.testing.TestCase.shortDescription is now returned
+instead:
+
+    >>> from manuel.testing import TestCase
+    >>> m = manuel.Manuel()
+    >>> six.print_(TestCase(m, manuel.RegionContainer(), None).id())
+    <memory>
+
+
+DocTestRunner peaks at sys.argv
+-------------------------------
+
+A (bad) feature of DocTestRunner (and its subclass DebugRunner) is that it
+will turn on "verbose" mode if sys.argv contains "-v".  This means that if you
+pass -v to a test runner that then invokes Manuel, all tests would fail
+because extra junk was inserted into the doctest output.  That is, before I
+fixed it.  Now, manuel.doctest.Manuel passes "verbose = False" to the
+DocTestRunner constructor which disables the functionality.
+
+We can ensure that the verbose mode is always disabled by creating test
+standins for DocTestRunner and DebugRunner that capture their constructor
+arguments.
+
+.. code-block:: python
+
+    import doctest
+    import manuel.doctest
+    class FauxDocTestRunner(object):
+        def __init__(self, **kws):
+           self.kws = kws
+    try:
+        manuel.doctest.DocTestRunner = FauxDocTestRunner
+        manuel.doctest.DebugRunner = FauxDocTestRunner
+
+        m = manuel.doctest.Manuel()
+
+    finally:
+        manuel.doctest.DocTestRunner = doctest.DocTestRunner
+        manuel.doctest.DebugRunner = doctest.DebugRunner
+
+Now, with the Manuel object instantiated we can verify that verbose is off for
+both test runners.
+
+    >>> m.runner.kws['verbose']
+    False
+
+    >>> m.debug_runner.kws['verbose']
+    False

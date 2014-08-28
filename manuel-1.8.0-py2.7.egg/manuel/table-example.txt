@@ -1,0 +1,335 @@
+.. _fit-table-example:
+
+FIT Table Example
+=================
+
+Here is an example of writing a relatively complex Manuel plug-in.
+
+Occasionally when writing a doctest, you want a better way to express a test
+than doctest by itself provides.
+
+For example, you may want to succinctly express the result of an expression for
+several sets of inputs and outputs.
+
+That's something `FIT <http://fit.c2.com/wiki.cgi?SimpleExample>`_ tables do a
+good job of.
+
+We can use Manuel to write a parser that can read the tables, an evaluator that
+can check to see if the assertions made in the tables match reality, and a
+formatter to display the results if they don't.
+
+We'll use `reST <http://docutils.sourceforge.net/rst.html>`_ tables as the
+table format.  The table source will look like this::
+
+    =====  =====  ======
+    \      A or B
+    --------------------
+      A      B    Result
+    =====  =====  ======
+    False  False  False
+    True   False  True
+    False  True   True
+    True   True   True
+    =====  =====  ======
+
+.. -> example_table_1
+
+When rendered to HTML, it will look like this:
+
+    =====  =====  ======
+    \      A or B
+    --------------------
+      A      B    Result
+    =====  =====  ======
+    False  False  False
+    True   False  True
+    False  True   True
+    True   True   True
+    =====  =====  ======
+
+.. -> example_table_2
+
+    >>> example_table_1 == example_table_2
+    True
+
+
+Documents
+---------
+
+Here is an example of a source document we want our plug-in to be able to
+understand::
+
+    The "or" operator
+    =================
+
+    Here is an example of the "or" operator in action:
+
+    =====  =====  ======
+    \      A or B
+    --------------------
+      A      B    Result
+    =====  =====  ======
+    False  False  False
+    True   False  True
+    False  True   True
+    True   True   True
+    =====  =====  ======
+
+.. -> source
+
+Manuel plug-ins operate on instances of :class:`manuel.Document`.
+
+.. code-block:: python
+
+    import manuel
+    document = manuel.Document(source, location='fake.txt')
+
+
+Parsing
+-------
+
+We need an object to represent the tables.
+
+.. code-block:: python
+
+    class Table(object):
+        def __init__(self, expression, variables, examples):
+            self.expression = expression
+            self.variables = variables
+            self.examples = examples
+
+We'll also need a function to find the tables in the document, extract the
+pertinent details, and instantiate Table objects.
+
+.. code-block:: python
+
+    import re
+    import six
+
+    table_start = re.compile(r'(?<=\n\n)=[= ]+\n(?=[ \t]*?\S)', re.DOTALL)
+    table_end = re.compile(r'\n=[= ]+\n(?=\Z|\n)', re.DOTALL)
+
+    def parse_tables(document):
+        for region in document.find_regions(table_start, table_end):
+            lines = enumerate(iter(region.source.splitlines()))
+            six.advance_iterator(lines) # skip the first line
+
+            # grab the expression to be evaluated
+            expression = six.advance_iterator(lines)[1]
+            if expression.startswith('\\'):
+                expression = expression[1:]
+
+            six.advance_iterator(lines) # skip the divider line
+            variables = [v.strip() for v in six.advance_iterator(lines)[1].split()][:-1]
+
+            six.advance_iterator(lines) # skip the divider line
+
+            examples = []
+            for lineno_offset, line in lines:
+                if line.startswith('='):
+                    break # we ran into the final divider, so stop
+
+                values = [eval(v.strip(), {}) for v in line.split()]
+                inputs = values[:-1]
+                output = values[-1]
+
+                examples.append((inputs, output, lineno_offset))
+
+            table = Table(expression, variables, examples)
+            document.claim_region(region)
+            region.parsed = table
+
+If we parse the Document we can see that the table was recognized.
+
+    >>> parse_tables(document)
+    >>> region = list(document)[1]
+    >>> import six
+    >>> six.print_(region.source, end='')
+    =====  =====  ======
+    \      A or B
+    --------------------
+      A      B    Result
+    =====  =====  ======
+    False  False  False
+    True   False  True
+    False  True   True
+    True   True   True
+    =====  =====  ======
+    >>> region.parsed
+    <Table object at ...>
+
+
+Evaluating
+----------
+
+Now that we can find and extract the tables from the source, we need to be able
+to check them for correctness.
+
+The parse phase decomposed the :class:`Document` into several :class:`Region`
+instances.  During the evaluation phase each evaluater is called once for each
+region.
+
+The evaluate_table function iterates over each set of inputs given in a single
+table, evaluate the inputs with the expression and compare the result with what
+was expected.  Each discrepancy will be stored as a :class:`TableError` in a
+:class:`TableErrors` object.
+
+.. code-block:: python
+
+    class TableErrors(list):
+        pass
+
+
+    class TableError(object):
+        def __init__(self, location, lineno, expected, got):
+            self.location = location
+            self.lineno = lineno
+            self.expected = expected
+            self.got = got
+
+        def __str__(self):
+            return '<%s %s:%s>' % (
+                self.__class__.__name__, self.location, self.lineno)
+
+
+    def evaluate_table(region, document, globs):
+        if not isinstance(region.parsed, Table):
+            return
+
+        table = region.parsed
+        errors = TableErrors()
+        for inputs, output, lineno_offset in table.examples:
+            result = eval(table.expression, dict(zip(table.variables, inputs)))
+            if result != output:
+                lineno = region.lineno + lineno_offset
+                errors.append(
+                    TableError(document.location, lineno, output, result))
+
+        region.evaluated = errors
+
+Now we can use the function to evaluate our table.
+
+    >>> evaluate_table(region, document, {})
+
+Yay!  There were no errors:
+
+    >>> region.evaluated
+    []
+
+What would happen if there were errors?
+
+::
+
+    The "or" operator
+    =================
+
+    Here is an (erroneous) example of the "or" operator in action:
+
+    =====  =====  ======
+    \      A or B
+    --------------------
+      A      B    Result
+    =====  =====  ======
+    False  False  True
+    True   False  True
+    False  True   False
+    True   True   True
+    =====  =====  ======
+
+.. -> source_with_errors
+
+    >>> document = manuel.Document(source_with_errors, location='fake.txt')
+    >>> parse_tables(document)
+    >>> region = list(document)[1]
+    >>> evaluate_table(region, document, {})
+
+...the result of evaluaton would include them:
+
+    >>> region.evaluated
+    [<TableError object at ...>]
+
+
+Formatting Errors
+-----------------
+
+Now that we can parse the tables and evaluate them, we need to be able to
+display the results in a readable fashion.
+
+.. code-block:: python
+
+    def format_table_errors(document):
+        for region in document:
+            if not isinstance(region.evaluated, TableErrors):
+                continue
+
+            # if there were no errors, there is nothing to report
+            if not region.evaluated:
+                continue
+
+            messages = []
+            for error in region.evaluated:
+                messages.append('%s, line %d: expected %r, got %r instead.' % (
+                    error.location, error.lineno, error.expected, error.got))
+
+            sep = '\n    '
+            header = 'when evaluating table at %s, line %d' % (
+                document.location, region.lineno)
+            region.formatted = header + sep + sep.join(messages)
+
+
+We can see how the results are formatted.
+
+    >>> format_table_errors(document)
+    >>> six.print_(region.formatted, end='')
+    when evaluating table at fake.txt, line 6
+        fake.txt, line 11: expected True, got False instead.
+        fake.txt, line 13: expected False, got True instead.
+
+
+All Together Now
+----------------
+
+All the pieces (parsing, evaluating, and formatting) are available now, so we
+just have to put them together into a single "Manuel" object.
+
+.. code-block:: python
+
+    class Manuel(manuel.Manuel):
+        def __init__(self):
+            manuel.Manuel.__init__(self, [parse_tables], [evaluate_table],
+                [format_table_errors])
+
+Now we can create a fresh document and tell it to do all the above steps
+(parse, evaluate, format) using an instance of our plug-in.
+
+    >>> m = Manuel()
+    >>> document = manuel.Document(source_with_errors, location='fake.txt')
+    >>> document.process_with(m, globs={})
+    >>> six.print_(document.formatted(), end='')
+    when evaluating table at fake.txt, line 6
+        fake.txt, line 11: expected True, got False instead.
+        fake.txt, line 13: expected False, got True instead.
+
+Of course, if there were no errors, nothing would be reported:
+
+    >>> document = manuel.Document(source, location='fake.txt')
+    >>> document.process_with(m, globs={})
+    >>> six.print_(document.formatted())
+
+If we wanted to use instances of our Manuel object in a test, we would follow
+the directions in :ref:`getting-started`, importing Manuel from the module
+where we placed the code, just like any other Manuel plug-in.
+
+.. this next bit is actually a reST comment, but it is run during tests anyway
+    (note the single colon instead of double colon)
+
+.. invisible-code-block: python
+
+    import unittest
+    suite = manuel.testing.TestSuite(m, 'table-example.txt')
+
+.. run this file through the Manuel instance constructed above to ensure it
+   actually works when given a real file to process
+
+    >>> suite.run(unittest.TestResult())
+    <unittest.TestResult run=1 errors=0 failures=0>

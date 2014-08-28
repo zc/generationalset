@@ -1,0 +1,14 @@
+README.rst
+setup.py
+src/zc/__init__.py
+src/zc.generationalset.egg-info/PKG-INFO
+src/zc.generationalset.egg-info/SOURCES.txt
+src/zc.generationalset.egg-info/dependency_links.txt
+src/zc.generationalset.egg-info/entry_points.txt
+src/zc.generationalset.egg-info/namespace_packages.txt
+src/zc.generationalset.egg-info/not-zip-safe
+src/zc.generationalset.egg-info/requires.txt
+src/zc.generationalset.egg-info/top_level.txt
+src/zc/generationalset/README.txt
+src/zc/generationalset/__init__.py
+src/zc/generationalset/tests.py

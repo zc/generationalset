@@ -1,0 +1,7 @@
+setuptools
+BTrees
+
+[test]
+manuel
+mock
+zope.testing

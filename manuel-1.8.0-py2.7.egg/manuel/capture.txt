@@ -1,0 +1,84 @@
+manuel.capture
+==============
+
+This document explores the edge cases and boundry conditions of the
+manuel.capture module.  It is not meant as end-user documentation, but is
+rather a set of tests.
+
+
+Respecting indentation
+----------------------
+
+The text captured is determined by the indentation of the capture directive.
+
+::
+
+    First level of indentation.
+
+        Second level of indentation.
+
+            Third level of indentation.
+
+        .. -> foo
+
+.. -> source
+
+    >>> import manuel
+    >>> document = manuel.Document(source)
+    >>> import manuel.capture
+    >>> manuel.capture.find_captures(document)
+    >>> [r.parsed.block for r in document if r.parsed]
+    ['Third level of indentation.\n']
+
+
+Nested directives
+-----------------
+
+If two capture directives are nested, the outer one is effective.
+
+::
+
+    First level of indentation.
+
+        Second level of indentation.
+
+            Third level of indentation.
+
+        .. -> foo
+
+    .. -> bar
+
+.. -> source
+
+    >>> import manuel
+    >>> document = manuel.Document(source)
+    >>> import manuel.capture
+    >>> manuel.capture.find_captures(document)
+    >>> [r.parsed.block for r in document if r.parsed]
+    ['Second level of indentation.\n\n    Third level of indentation.\n\n.. -> foo\n']
+
+
+
+Error reporting
+---------------
+
+If the capture directive is accidentally indented, a (reasonable) error will be
+generated.
+
+::
+
+    This is a block that will be captured::
+
+        Block
+
+        .. -> foo
+
+.. -> source
+
+    >>> import manuel
+    >>> document = manuel.Document(source)
+    >>> import manuel.capture
+    >>> manuel.capture.find_captures(document)
+    Traceback (most recent call last):
+        ...
+    RuntimeError: couldn't find the start of the block; improper indentation of capture directive?
