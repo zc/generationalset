@@ -75,10 +75,14 @@ When an object is added to a GSet, call the
 
 When an object is changed, call the ``changed`` method on the Gset
 with the object. If object is not present in the Gset, update will
-fail silently::
+raise a ValueError::
 
     >>> things.changed(athing)
     >>> things.changed(Thing(43))
+    Traceback (most recent call last):
+    ...
+    ValueError: Thing with id 43 is not in the generational set.
+
     >>> things.generational_updates(0)
     {'generation': 3, 'adds': [Thing(42)]}
 

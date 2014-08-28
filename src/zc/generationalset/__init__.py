@@ -54,8 +54,12 @@ class GenerationalSet(persistent.Persistent):
         if id is None:
             id = self.get_id(ob)
         generation = self.generations.get(id, None)
-        if generation is not None:
-            self.add(ob, id)
+        if generation is None:
+            error = (
+                '{} with id {} is not in the generational set.'
+                ).format(ob.__class__.__name__, str(id))
+            raise ValueError(error)
+        self.add(ob, id)
 
     def remove(self, ob, id=None):
         if id is None:

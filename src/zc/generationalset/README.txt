@@ -187,6 +187,10 @@ Updating the Gset. Only if object is present in the set, it will be updated:
 
 
     >>> set.changed(Thing(2))
+    Traceback (most recent call last):
+    ...
+    ValueError: Thing with id 2 is not in the generational set.
+
     >>> set.generational_updates(1)
     {'generation': 2, 'adds': [Thing(1)]}
 
