@@ -170,6 +170,11 @@ without subset generations:
 Changes
 *******
 
+0.3.0 (2014-08-28)
+==================
+
+- Added a ``changed`` method to make intent clear when simply recording changes.
+
 - Fixed: exceptions were raised when objects added to generational
   sets quacked a little like generational sets.
 
