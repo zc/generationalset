@@ -65,13 +65,26 @@ Every object in a GSet must have an id.  By default, this is provided
 by an ``id`` attribute, but you can configure a GSet to use another
 attribute or some other mechanism to get an id for an object.
 
-When an object is added to a GSet, or when it changes, call the
+When an object is added to a GSet, call the
 ``add`` method on the Gset with the object::
 
     >>> from zc.generationalset import GSet
     >>> things = GSet()
     >>> athing = Thing(42)
     >>> things.add(athing)
+
+When an object is changed, call the ``changed`` method on the Gset
+with the object. If object is not present in the Gset, update will
+raise a KeyError::
+
+    >>> things.changed(athing)
+    >>> things.changed(Thing(43))
+    Traceback (most recent call last):
+    ...
+    KeyError: 43
+
+    >>> things.generational_updates(0)
+    {'generation': 3, 'adds': [Thing(42)]}
 
 To remove an object, call
 the ``remove`` method with the object::
@@ -82,13 +95,13 @@ To get updates to a set since a given generation, call
 ``generational_updates``, passing a generation::
 
     >>> things.generational_updates(0)
-    {'generation': 3, 'removals': [42]}
+    {'generation': 4, 'removals': [42]}
 
     >>> things.add(Thing(1))
     >>> things.generational_updates(0)
-    {'generation': 4, 'removals': [42], 'adds': [Thing(1)]}
+    {'generation': 5, 'removals': [42], 'adds': [Thing(1)]}
     >>> things.generational_updates(3)
-    {'generation': 4, 'adds': [Thing(1)]}
+    {'generation': 5, 'adds': [Thing(1)]}
 
 Note that generations start at 1.
 
