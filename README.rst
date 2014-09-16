@@ -27,7 +27,7 @@ Assumptions:
 GSets track state by generation.  A client presents a generation and
 is sent updates made since the presented generation.  GSets can be
 grouped into trees with a shared generation.  A client can present a
-single generation and be send updates for all of the sets making up a
+single generation and be sent updates for all of the sets making up a
 database.
 
 This implementation of generational sets uses `ZODB
