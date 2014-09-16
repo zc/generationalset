@@ -128,7 +128,7 @@ contents
 
 GSets support iteration, and querying length and containment. They
 don't currently support set operations, like intersection and
-union. You can also retrieve an item from a GSet using it's id::
+union. You can also retrieve an item from a GSet using its id::
 
     >>> len(things)
     1
