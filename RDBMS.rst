@@ -1,11 +1,11 @@
-Implementing generatonal sets using RDBMSs
-==========================================
-
-This initial implementation of generational sets uses ZODB.
+Notes on implementing generatonal sets using RDBMSs
+==================================================
 
 It should be possible to use relational databases as well.
 
 This document brainstorms how this might work.
+
+.. contents::
 
 Review: the basic object model
 ==============================
