@@ -98,8 +98,13 @@ The generational_updates can include additions or removals:
 Note that a client can see a removal for an object it has never seen
 an update for:
 
-    >>> pprint(set.generational_updates(0))
+    >>> pprint(set.generational_updates(1))
     {'adds': [Thing(2)], 'generation': 5, 'removals': [1]}
+
+But a client without data won't see removals:
+
+    >>> pprint(set.generational_updates(0))
+    {'adds': [Thing(2)], 'generation': 5}
 
 A generational set keeps a limited number of removals generations.  This
 is configurable:
@@ -115,7 +120,7 @@ or removals, signaling that the client should request the
 entire set (for example by iterating over it).
 
     >>> pprint(set.generational_updates(0))
-    {'contents': [], 'generation': 9}
+    {'generation': 9}
     >>> pprint(set.generational_updates(1))
     {'contents': [], 'generation': 9}
     >>> pprint(set.generational_updates(2))
@@ -168,7 +173,7 @@ An object can only appear in one of adds and removals:
     {'adds': [Thing(1)], 'generation': 2}
 
     >>> set.remove(Thing(1))
-    >>> pprint(set.generational_updates(0))
+    >>> pprint(set.generational_updates(1))
     {'generation': 3, 'removals': [1]}
 
     >>> set.add(Thing(1))
@@ -176,7 +181,7 @@ An object can only appear in one of adds and removals:
     {'adds': [Thing(1)], 'generation': 4}
 
     >>> set.remove(Thing(1))
-    >>> pprint(set.generational_updates(0))
+    >>> pprint(set.generational_updates(1))
     {'generation': 5, 'removals': [1]}
 
 Updating the Gset. Only if object is present in the set, it will be updated:

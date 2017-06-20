@@ -103,16 +103,18 @@ class GenerationalSet(persistent.Persistent):
             return result # common short circuit
 
         if (len(self.removals) >= self.maximum_removals and
-            generation < self.removals.minKey()
+            generation < self.removals.minKey() and
+            generation
             ):
             values = self.contents.values()
             key = 'contents'
         else:
             values = self.contents.values(generation+1)
             key = 'adds'
-            removals = list(self.removals.values(generation+1))
-            if removals:
-                result['removals'] = removals
+            if generation:
+                removals = list(self.removals.values(generation+1))
+                if removals:
+                    result['removals'] = removals
 
         values = list(values)
         if values or key == 'contents':

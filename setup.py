@@ -11,7 +11,8 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-name, version = 'zc.generationalset', '0.3.0'
+name = 'zc.generationalset'
+version = '0.3.0'
 
 install_requires = ['setuptools', 'BTrees']
 extras_require = dict(test=['manuel', 'mock', 'zope.testing'])
@@ -21,7 +22,11 @@ entry_points = """
 
 from setuptools import setup
 
-long_description=open('README.rst').read()
+def read(path):
+    with open(path as f):
+        return f.read()
+
+long_description=read('README.rst') + '\n\n' + read('CHANGES.rst')
 
 setup(
     author = 'Jim Fulton',
