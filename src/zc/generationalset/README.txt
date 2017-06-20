@@ -362,7 +362,7 @@ and override ```get_id(ob)``:
     >>> set.add(Thing(1))
     >>> set.add(Thing(2))
     >>> set.remove(Thing(1))
-    >>> set.generational_updates(1)
+    >>> pprint(set.generational_updates(1))
     {'adds': [Thing(2)], 'generation': 4, 'removals': ['1']}
 
 Thanks to JavaScript, the need to convert integer ids to strings is
@@ -375,7 +375,7 @@ pretty common, so StringIdGenerationalSet is included:
     >>> set.add(Thing(1))
     >>> set.add(Thing(2))
     >>> set.remove(Thing(1))
-    >>> set.generational_updates(1)
+    >>> pprint(set.generational_updates(1))
     {'adds': [Thing(2)], 'generation': 4, 'removals': ['1']}
 
 There's also a flavor of generational set that uses items as their own ids:
@@ -386,5 +386,5 @@ There's also a flavor of generational set that uses items as their own ids:
     >>> set.add((1, 2))
     >>> set.add((3, 4))
     >>> set.remove((1, 2))
-    >>> set.generational_updates(1)
+    >>> pprint(set.generational_updates(1))
     {'adds': [(3, 4)], 'generation': 4, 'removals': [(1, 2)]}
