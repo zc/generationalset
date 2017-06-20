@@ -163,27 +163,28 @@ An object can only appear in one of adds and removals:
 
     >>> set = zc.generationalset.GSet(maximum_removals=3)
     >>> set.add(Thing(1))
-    >>> set.generational_updates(0)
-    {'generation': 2, 'adds': [Thing(1)]}
+    >>> from pprint import pprint
+    >>> pprint(set.generational_updates(0))
+    {'adds': [Thing(1)], 'generation': 2}
 
     >>> set.remove(Thing(1))
-    >>> set.generational_updates(0)
+    >>> pprint(set.generational_updates(0))
     {'generation': 3, 'removals': [1]}
 
     >>> set.add(Thing(1))
-    >>> set.generational_updates(0)
-    {'generation': 4, 'adds': [Thing(1)]}
+    >>> pprint(set.generational_updates(0))
+    {'adds': [Thing(1)], 'generation': 4}
 
     >>> set.remove(Thing(1))
-    >>> set.generational_updates(0)
+    >>> pprint(set.generational_updates(0))
     {'generation': 5, 'removals': [1]}
 
 Updating the Gset. Only if object is present in the set, it will be updated:
 
     >>> set = zc.generationalset.GSet()
     >>> set.add(Thing(1))
-    >>> set.generational_updates(0)
-    {'generation': 2, 'adds': [Thing(1)]}
+    >>> pprint(set.generational_updates(0))
+    {'adds': [Thing(1)], 'generation': 2}
 
 
     >>> set.changed(Thing(2))
@@ -191,23 +192,23 @@ Updating the Gset. Only if object is present in the set, it will be updated:
     ...
     KeyError: 2
 
-    >>> set.generational_updates(1)
-    {'generation': 2, 'adds': [Thing(1)]}
+    >>> pprint(set.generational_updates(1))
+    {'adds': [Thing(1)], 'generation': 2}
 
     >>> set.changed(Thing(1))
-    >>> set.generational_updates(2)
-    {'generation': 3, 'adds': [Thing(1)]}
+    >>> pprint(set.generational_updates(2))
+    {'adds': [Thing(1)], 'generation': 3}
 
     >>> set.add(Thing(2))
-    >>> set.generational_updates(3)
-    {'generation': 4, 'adds': [Thing(2)]}
+    >>> pprint(set.generational_updates(3))
+    {'adds': [Thing(2)], 'generation': 4}
 
     >>> set.changed(Thing(2))
-    >>> set.generational_updates(4)
-    {'generation': 5, 'adds': [Thing(2)]}
+    >>> pprint(set.generational_updates(4))
+    {'adds': [Thing(2)], 'generation': 5}
 
-    >>> set.generational_updates(0)
-    {'generation': 5, 'adds': [Thing(1), Thing(2)]}
+    >>> pprint(set.generational_updates(0))
+    {'adds': [Thing(1), Thing(2)], 'generation': 5}
 
 Nested sets
 -----------
@@ -228,11 +229,11 @@ Note here that we didn't add child1 and child2 to parent.
 
 However, when we modify child1 and child, they'd add themselves to the parent:
 
-    >>> child1.add(Thing(11))
-    >>> child1.add(Thing(12))
-    >>> child2.add(Thing(21))
-    >>> child2.add(Thing(22))
-    >>> child2.remove(Thing(22))
+    >>> child1.add(Thing('11'))
+    >>> child1.add(Thing('12'))
+    >>> child2.add(Thing('21'))
+    >>> child2.add(Thing('22'))
+    >>> child2.remove(Thing('22'))
 
     >>> len(parent)
     2
@@ -240,16 +241,16 @@ However, when we modify child1 and child, they'd add themselves to the parent:
 Now we can ask the parent for updates:
 
     >>> pprint(parent.generational_updates(2))
-    {'adds': [{'adds': [Thing(12)], 'id': '1'},
-              {'adds': [Thing(21)], 'id': '2', 'removals': [22]}],
+    {'adds': [{'adds': [Thing('12')], 'id': '1'},
+              {'adds': [Thing('21')], 'id': '2', 'removals': ['22']}],
      'generation': 6}
     >>> pprint(parent.generational_updates(3)) # doctest: +NORMALIZE_WHITESPACE
-    {'adds': [{'adds': [Thing(21)], 'id': '2', 'removals': [22]}],
+    {'adds': [{'adds': [Thing('21')], 'id': '2', 'removals': ['22']}],
      'generation': 6}
     >>> pprint(parent.generational_updates(4))
-    {'adds': [{'id': '2', 'removals': [22]}], 'generation': 6}
+    {'adds': [{'id': '2', 'removals': ['22']}], 'generation': 6}
     >>> pprint(parent.generational_updates(5))
-    {'adds': [{'id': '2', 'removals': [22]}], 'generation': 6}
+    {'adds': [{'id': '2', 'removals': ['22']}], 'generation': 6}
     >>> pprint(parent.generational_updates(6))
     {'generation': 6}
 
@@ -276,12 +277,12 @@ added the children to child11.
 
 When a child is updated, it's generation because the same as the root object:
 
-    >>> child111.add(Thing(1111))
+    >>> child111.add(Thing('1111'))
     >>> child111.generation == parent.generation
     True
 
     >>> pprint(parent.generational_updates(8))
-    {'adds': [{'adds': [{'adds': [{'adds': [Thing(1111)], 'id': '111'}],
+    {'adds': [{'adds': [{'adds': [{'adds': [Thing('1111')], 'id': '111'}],
                          'id': '11'}],
                'id': '1'}],
      'generation': 9}
@@ -296,7 +297,7 @@ else (including replacing it with zope.event.notify).
 
     >>> import mock
     >>> with mock.patch('zc.generationalset.notify') as notify:
-    ...     child2.add(Thing(23))
+    ...     child2.add(Thing('23'))
     ...     notify.assert_called_once_with(parent)
 
 Specifying object ids
@@ -326,17 +327,12 @@ Objects can be retrieved by the object id:
     >>> set[(1,2)] == ob
     True
 
-    >>> ob = Thing(1)
-    >>> set.add(ob)
-    >>> set[1] == ob
-    True
-
 Attempting to retrieve a non-existing object results in a KeyError:
 
-    >>> set['foo']
+    >>> set[(42, 43)]
     Traceback (most recent call last):
       ...
-    KeyError: 'foo'
+    KeyError: (42, 43)
 
 Using alternate ids
 -------------------
@@ -352,8 +348,8 @@ alternate id attribute:
     >>> set.add(Other(name='foo'))
     >>> set.add(Other(name='bar'))
     >>> set.remove(Other(name='foo'))
-    >>> set.generational_updates(1)
-    {'generation': 4, 'removals': ['foo'], 'adds': [Other({'name': 'bar'})]}
+    >>> pprint(set.generational_updates(1))
+    {'adds': [Other({'name': 'bar'})], 'generation': 4, 'removals': ['foo']}
 
 For more complicated situations, you can subclass ``GenerationalSet``
 and override ```get_id(ob)``:
@@ -367,7 +363,7 @@ and override ```get_id(ob)``:
     >>> set.add(Thing(2))
     >>> set.remove(Thing(1))
     >>> set.generational_updates(1)
-    {'generation': 4, 'removals': ['1'], 'adds': [Thing(2)]}
+    {'adds': [Thing(2)], 'generation': 4, 'removals': ['1']}
 
 Thanks to JavaScript, the need to convert integer ids to strings is
 pretty common, so StringIdGenerationalSet is included:
@@ -380,7 +376,7 @@ pretty common, so StringIdGenerationalSet is included:
     >>> set.add(Thing(2))
     >>> set.remove(Thing(1))
     >>> set.generational_updates(1)
-    {'generation': 4, 'removals': ['1'], 'adds': [Thing(2)]}
+    {'adds': [Thing(2)], 'generation': 4, 'removals': ['1']}
 
 There's also a flavor of generational set that uses items as their own ids:
 
@@ -391,4 +387,4 @@ There's also a flavor of generational set that uses items as their own ids:
     >>> set.add((3, 4))
     >>> set.remove((1, 2))
     >>> set.generational_updates(1)
-    {'generation': 4, 'removals': [(1, 2)], 'adds': [(3, 4)]}
+    {'adds': [(3, 4)], 'generation': 4, 'removals': [(1, 2)]}

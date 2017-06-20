@@ -13,6 +13,7 @@
 ##############################################################################
 
 import doctest
+from pprint import pprint
 import unittest
 import manuel.capture
 import manuel.doctest
@@ -23,9 +24,8 @@ def ids_do_no_harm():
     >>> import zc.generationalset
     >>> set = zc.generationalset.GSet("test")
     >>> set.add(1, 1)
-    >>> set.generational_updates(0)
-    {'generation': 2, 'adds': [1]}
-
+    >>> pprint(set.generational_updates(0))
+    {'adds': [1], 'generation': 2}
     """
 
 def no_duck_typing():
