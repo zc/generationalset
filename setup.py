@@ -23,7 +23,7 @@ entry_points = """
 from setuptools import setup
 
 def read(path):
-    with open(path as f):
+    with open(path) as f:
         return f.read()
 
 long_description=read('README.rst') + '\n\n' + read('CHANGES.rst')
