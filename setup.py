@@ -12,7 +12,7 @@
 #
 ##############################################################################
 name = 'zc.generationalset'
-version = '0.3.0'
+version = '0.4.0'
 
 install_requires = ['setuptools', 'BTrees']
 extras_require = dict(test=['manuel', 'mock', 'zope.testing'])
